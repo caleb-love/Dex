@@ -386,6 +386,7 @@ Use the AskQuestion tool:
 
 Say: "The core system is ready. A couple optional add-ons you can set up now or skip:
 
+- **Productivity Tools** — Connect Notion, Slack, or Google Workspace for richer context
 - **Journaling** — Daily/weekly reflection prompts (2-3 min/day)
 - **Granola** — Automatic meeting processing (if you use it)
 - **Pendo** — Product analytics integration (if you're a Pendo customer)
@@ -481,6 +482,64 @@ Want to connect Pendo now?"
 
 **If no:**
 Say: "No problem! You can connect Pendo MCP later. Full instructions: https://support.pendo.io/hc/en-us/articles/41102236924955"
+
+### Productivity Tools Setup (if selected):
+
+Say: "Which productivity tools do you use? I can connect to them for richer context:
+
+- **Notion** — Search your workspace, pull docs into meeting prep
+- **Slack** — Search conversations, get context about people
+- **Google Workspace** — Gmail, Calendar, Contacts (more advanced setup)
+
+These are optional—Dex works great without them. But if you use these tools, connecting them unlocks:
+- 'What did Sarah say about the Q1 budget?' → Searches Slack
+- Meeting prep automatically pulls relevant Notion docs
+- Person pages show email/Slack history"
+
+Use the AskQuestion tool:
+```json
+{
+  "questions": [{
+    "id": "productivity_tools",
+    "prompt": "Which tools do you want to connect?",
+    "allow_multiple": true,
+    "options": [
+      {"id": "notion", "label": "Notion"},
+      {"id": "slack", "label": "Slack"},
+      {"id": "google", "label": "Google Workspace (Gmail, Calendar)"},
+      {"id": "skip", "label": "Skip - I'll add these later"}
+    ]
+  }]
+}
+```
+
+**For each selected tool:**
+
+**Notion:** Run `/integrate-notion` flow inline
+- Guide through creating Notion integration
+- Collect token, configure MCP
+
+**Slack:** Run `/integrate-slack` flow inline
+- Offer cookie auth (easier) vs bot token
+- Collect credential, configure MCP
+
+**Google:** Run `/integrate-google` flow inline
+- Warn this is the most complex setup (~5 min)
+- Guide through OAuth setup
+- Offer to skip and add later if they're overwhelmed
+
+**If skip:**
+Say: "No problem! You can add these anytime:
+- `/integrate-notion`
+- `/integrate-slack`
+- `/integrate-google`"
+
+**After any tool setup:**
+1. Update `System/integrations/config.yaml` with enabled tools
+2. Remind user to restart Claude Desktop
+3. Say: "✓ [Tool] connected! [Brief explanation of what they can now do]"
+
+---
 
 ### Background Learning Setup (if selected, macOS only):
 

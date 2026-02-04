@@ -90,7 +90,7 @@ For **deterministic operations** (task CRUD, calendar writes), continue using De
 
 The bridge is pre-installed at `.pi/extensions/dex-mcp-bridge.ts`. It connects to:
 
-- **task-mcp** — For task operations
+- **work-mcp** — For task/goal/priority operations
 - **calendar-mcp** — For calendar access
 
 ### AGENTS.md

@@ -529,6 +529,59 @@ Your data:
 
 ---
 
+### Step 9b: Check New Integrations (After Success)
+
+After successful update, check if new integration features are available:
+
+```python
+from core.integrations import get_post_update_integration_message, should_show_integration_prompt
+
+if should_show_integration_prompt():
+    msg = get_post_update_integration_message()
+    if msg:
+        print(msg)
+```
+
+**If integrations are available but not configured:**
+```
+---
+
+## 🔌 New: Productivity Integrations
+
+This update includes integrations for your favorite tools:
+
+- **Notion** — Search your workspace, pull docs into meeting prep
+- **Slack** — Search conversations, get context about people
+- **Google** — Gmail search, email context in person pages
+
+**Set up now?** These are optional but unlock powerful features like:
+- "What did Sarah say about the Q1 budget?" → Searches Slack
+- Meeting prep pulls relevant docs from Notion
+- Person pages show email/Slack history
+
+Run `/integrate-notion`, `/integrate-slack`, or `/integrate-google` to set up.
+```
+
+**If user has integrations that could be upgraded:**
+```
+---
+
+## 🔄 Integration Upgrade Available
+
+You have some integrations that could be upgraded to Dex recommended packages:
+
+### Notion
+- **Current:** custom-notion-mcp
+- **Recommended:** @notionhq/notion-mcp-server
+- **Benefits:** Official from Notion, Best maintained, Full API coverage
+
+**Options:**
+1. **Keep existing** — Your current setup works fine
+2. **Upgrade** — Run `/integrate-notion` to switch to recommended
+```
+
+---
+
 ### Step 10: Track Usage (Silent)
 
 Update usage log:
