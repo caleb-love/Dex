@@ -260,49 +260,35 @@ export function getTaskSummary(): {
  * Load week priorities from current week file
  */
 export function loadWeekPriorities(): WeekPriority[] {
-  // Find current week file (format: "Week_YYYY-MM-DD.md")
-  if (!fs.existsSync(WEEK_PRIORITIES_PATH)) return [];
-
-  const files = fs.readdirSync(WEEK_PRIORITIES_PATH);
-  const weekFiles = files.filter((f) => f.startsWith("Week_") && f.endsWith(".md"));
-
-  if (weekFiles.length === 0) return [];
-
-  // Get most recent week file
-  const latestWeek = weekFiles.sort().reverse()[0];
-  const content = readFileSync(path.join(WEEK_PRIORITIES_PATH, latestWeek!));
+  // Read Week_Priorities.md directly
+  const weekFilePath = path.join(WEEK_PRIORITIES_PATH, "Week_Priorities.md");
+  const content = readFileSync(weekFilePath);
   if (!content) return [];
 
-  // Parse priorities (looking for ## Priority X sections)
+  // Look for "## 🎯 Top 3 This Week" section
+  const topThreeMatch = content.match(/## 🎯 Top 3 This Week[\s\S]*?\n([\s\S]*?)(?=\n---|\n##|$)/);
+  if (!topThreeMatch) return [];
+
+  const section = topThreeMatch[1]!;
+  
+  // Extract numbered goals: 1. **Goal text** or 1. Goal text
+  const goalRegex = /^\d+\.\s+(?:\*\*)?(.+?)(?:\*\*)?$/gm;
   const priorities: WeekPriority[] = [];
-  const priorityRegex = /## (Priority \d+): (.+?)\n([\s\S]*?)(?=\n## |$)/g;
-
+  
   let match;
-  while ((match = priorityRegex.exec(content)) !== null) {
-    const [, name, goal, tasksSection] = match;
-
-    // Extract tasks (lines starting with - [ ] or - [x])
-    const taskLines = tasksSection!.match(/^- \[[ x]\] .+$/gm) || [];
-    const tasks = taskLines.map((line) => {
-      const parsed = parseTaskLine(line);
-      return parsed?.title || line;
-    });
-
-    const completedTasks = taskLines.filter((line) => line.includes("- [x]"));
-
-    const progress = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
-
-    let status: WeekPriority["status"] = "on-track";
-    if (progress === 0) status = "not-started";
-    else if (progress < 50) status = "behind";
-
+  while ((match = goalRegex.exec(section)) !== null) {
+    const goalText = match[1]!.trim();
+    
+    // Determine if goal is completed (contains ✅ or starts with [x])
+    const completed = goalText.includes("✅") || goalText.startsWith("[x]");
+    
     priorities.push({
-      name: name!,
-      goal: goal!,
-      tasks,
-      completedTasks: completedTasks.map((line) => line.replace("- [x] ", "")),
-      progress,
-      status,
+      name: `Goal ${priorities.length + 1}`,
+      goal: goalText.replace(/✅|^\[x\]\s*/g, "").trim(),
+      tasks: [], // Not tracking sub-tasks for now
+      completedTasks: completed ? [goalText] : [],
+      progress: completed ? 100 : 0,
+      status: completed ? "on-track" : "not-started",
     });
   }
 
