@@ -315,19 +315,19 @@ You just used **Cursor** to run setup. That works great for daily use.
 
 There's also **Claude Code** - a more powerful option available via command line or Desktop app. The key difference? **Hooks** - automatic behaviors that make the system more intelligent.
 
-### The Choice: Parallel Editing vs Persistent Intelligence
+### The Choice: IDE Experience vs Persistent Intelligence
 
-**Cursor** is built for **parallel editing**. You can spawn multiple Claude instances simultaneously - one researching while another drafts while a third updates pages. No hooks, but commands and skills work perfectly. For heavy file editing with multiple agents working in parallel, Cursor is powerful.
+**Cursor** is built for **the full IDE experience**. You get parallel agents, integrated file explorer, side-by-side editing, and immediate access to your entire folder structure. No hooks, but commands and skills work perfectly. When you need to explore files, edit multiple things at once, and navigate your codebase visually, Cursor is purpose-built for it.
 
-**Claude Code** (Terminal or Desktop) is built for **persistent automation**. Hooks live here - automatic context loading, guaranteed execution, compound learning. Single-threaded, but that's the trade-off for deterministic behavior. For systems that reliably remember and maintain themselves, Claude Code delivers.
+**Claude Code** (Terminal or Desktop) is built for **persistent automation**. Hooks live here - automatic context loading, guaranteed execution, compound learning. Claude Code Desktop also supports parallel agents (multiple sessions), but you don't get the integrated file explorer and side-by-side folder access that Cursor provides. The trade-off is deterministic behavior - hooks guarantee context loads, learning persists, and the system truly remembers.
 
-Think of it as Swiss Army knife (Cursor - versatile, parallel) and specialist's tool (Claude Code - precise, guaranteed). Most people use both - Cursor when editing multiple files, Claude Code for workflows where reliability matters.
+Think of it as IDE (Cursor - full development environment, visual file navigation) and execution engine (Claude Code - guaranteed automation, persistent intelligence). Most people use both - Cursor when they need to explore and edit files visually, Claude Code for workflows where reliable automation and hooks matter.
 
 | Access Method | Strength | Hooks? | Setup |
 |--------------|----------|--------|-------|
-| **Cursor** | Parallel agents, heavy editing | No | Already done |
-| **Claude Code** (command line) | Guaranteed hooks, persistent learning | Yes | 5 min install |
-| **Claude Code** (Desktop app) | Guaranteed hooks, visual interface | Yes | 5 min install |
+| **Cursor** | Full IDE with file explorer, parallel agents, side-by-side editing | No | Already done |
+| **Claude Code** (command line) | Guaranteed hooks, persistent learning, parallel agents | Yes | 5 min install |
+| **Claude Code** (Desktop app) | Guaranteed hooks, parallel agents, visual sessions (no file explorer) | Yes | 5 min install |
 
 ### The Power of Hooks: CLAUDE.md vs Guaranteed Execution
 
