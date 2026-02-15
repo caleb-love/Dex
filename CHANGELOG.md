@@ -6,12 +6,6 @@ All notable changes to Dex will be documented in this file.
 
 ---
 
-## [Unreleased]
-
-*Nothing yet - changes appear here until the next push to GitHub.*
-
----
-
 ## [1.4.0] - 2026-02-15
 
 ### 🔧 Fixed: Dex Now Always Knows What Day It Is

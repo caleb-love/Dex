@@ -248,7 +248,9 @@ Dex continuously learns from usage and external sources through automatic checks
 **Setup details:** See `06-Resources/Dex_System/Dex_Technical_Guide.md` for installation and configuration.
 
 ### Changelog Discipline
-After making significant system changes (new commands, CLAUDE.md edits, structural changes), update `CHANGELOG.md` under `[Unreleased]` before finishing the task.
+After making significant system changes (new commands, CLAUDE.md edits, structural changes), update `CHANGELOG.md` before finishing the task.
+
+**No [Unreleased] section.** Everything in the changelog has already been pushed to GitHub — that IS the release. When adding an entry, give it a version number and today's date immediately. The `/dex-push` skill handles versioning at push time.
 
 ### Analytics Tracking for New Capabilities
 
