@@ -795,15 +795,29 @@ async def handle_list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="finalize_onboarding",
-            description="Complete onboarding: create vault structure, write configs, setup MCP. Requires all steps completed.",
+            description="Complete onboarding: create vault structure, write configs, setup MCP. Requires all steps completed. Use dry_run=true to preview what would be created without making changes.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "dry_run": {
+                        "type": "boolean",
+                        "description": "If true, show what would be created without actually creating anything. Used for QA testing.",
+                        "default": False
+                    }
+                }
+            }
+        ),
+        types.Tool(
+            name="check_onboarding_complete",
+            description="Check if onboarding is complete and get vault age. Returns completion status and days since setup.",
             inputSchema={
                 "type": "object",
                 "properties": {}
             }
         ),
         types.Tool(
-            name="check_onboarding_complete",
-            description="Check if onboarding is complete and get vault age. Returns completion status and days since setup.",
+            name="cleanup_qa_session",
+            description="Delete the QA/test onboarding session file without affecting the real onboarding marker. Use after /qa-onboarding to clean up.",
             inputSchema={
                 "type": "object",
                 "properties": {}
@@ -1106,17 +1120,18 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
             return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
         
         elif name == "finalize_onboarding":
+            dry_run = arguments.get('dry_run', False)
             session = load_session()
-            
+
             if not session:
                 result = create_error_response("No active session", suggestion="Call start_onboarding_session first")
                 return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
-            
+
             # Verify all required steps completed
             required_steps = [1, 2, 3, 4, 5, 6]
             completed = session['completed_steps']
             missing = [s for s in required_steps if s not in completed]
-            
+
             if missing:
                 step_names = {1: "Name", 2: "Role", 3: "Company Size", 4: "Email Domain", 5: "Pillars", 6: "Communication"}
                 result = create_error_response(
@@ -1124,7 +1139,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                     suggestion=f"Complete these steps first: {', '.join(step_names[s] for s in missing)}"
                 )
                 return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
-            
+
             # Critical check for Step 4
             if 4 not in completed or not session['data'].get('email_domain'):
                 result = create_error_response(
@@ -1134,7 +1149,98 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                     suggestion="Go back to Step 4 and provide email domain"
                 )
                 return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
-            
+
+            # ---- DRY RUN MODE ----
+            if dry_run:
+                logger.info("Finalize (DRY RUN) - previewing what would be created")
+
+                # Compute folders that would be created
+                para_folders = [
+                    "04-Projects", "05-Areas/People/Internal", "05-Areas/People/External",
+                    "05-Areas/Companies", "00-Inbox/Meetings", "00-Inbox/Ideas",
+                    "06-Resources/Learnings", "06-Resources/Quarterly_Reviews",
+                    "07-Archives/04-Projects", "07-Archives/Plans", "07-Archives/Reviews",
+                    "System/Templates", "01-Quarter_Goals", "03-Tasks", "02-Week_Priorities"
+                ]
+                would_create_folders = [f for f in para_folders if not (BASE_DIR / f).exists()]
+                already_exist_folders = [f for f in para_folders if (BASE_DIR / f).exists()]
+
+                # Compute files that would be created
+                would_create_files = []
+                already_exist_files = []
+
+                tasks_file = BASE_DIR / '03-Tasks' / 'Tasks.md'
+                if not tasks_file.exists():
+                    would_create_files.append('03-Tasks/Tasks.md')
+                else:
+                    already_exist_files.append('03-Tasks/Tasks.md')
+
+                priorities_file = BASE_DIR / '02-Week_Priorities' / 'Week_Priorities.md'
+                if not priorities_file.exists():
+                    would_create_files.append('02-Week_Priorities/Week_Priorities.md')
+                else:
+                    already_exist_files.append('02-Week_Priorities/Week_Priorities.md')
+
+                would_create_files.append('System/user-profile.yaml')
+                would_create_files.append('System/pillars.yaml')
+
+                # Configs that would be updated
+                would_update_configs = ['CLAUDE.md (User Profile section)']
+                if MCP_CONFIG_EXAMPLE.exists():
+                    would_update_configs.append('System/.mcp.json')
+
+                # Build preview of user-profile.yaml content
+                data = session['data']
+                profile_preview = {
+                    'name': data.get('name', ''),
+                    'role': data.get('role', ''),
+                    'role_group': data.get('role_group', ''),
+                    'company': data.get('company', ''),
+                    'company_size': data.get('company_size', ''),
+                    'email_domain': data.get('email_domain', ''),
+                    'obsidian_mode': data.get('obsidian_mode', False),
+                    'communication': data.get('communication', {})
+                }
+
+                # Build preview of pillars.yaml content
+                pillars_preview = []
+                for pillar in data.get('pillars', []):
+                    pillar_id = pillar.lower().replace(' ', '-').replace('_', '-')
+                    pillars_preview.append({'id': pillar_id, 'name': pillar})
+
+                # Completion marker preview
+                marker_preview = {
+                    'completed_at': '(timestamp)',
+                    'user_name': data.get('name', ''),
+                    'role': data.get('role', ''),
+                    'email_domain': data.get('email_domain', ''),
+                    'has_pillars': len(data.get('pillars', [])) > 0,
+                    'phase2_completed': False,
+                    'pre_analysis_deferred': True
+                }
+
+                dry_run_summary = {
+                    'dry_run': True,
+                    'validation_passed': True,
+                    'would_create_folders': would_create_folders,
+                    'already_exist_folders': already_exist_folders,
+                    'would_create_files': would_create_files,
+                    'already_exist_files': already_exist_files,
+                    'would_update_configs': would_update_configs,
+                    'would_create_marker': marker_preview,
+                    'would_delete_session': True,
+                    'preview_user_profile': profile_preview,
+                    'preview_pillars': pillars_preview,
+                    'session_data_snapshot': data
+                }
+
+                result = create_success_response(
+                    dry_run_summary,
+                    f"DRY RUN: Would create {len(would_create_folders)} folders, {len(would_create_files)} files, update {len(would_update_configs)} configs. No changes made."
+                )
+                return [types.TextContent(type="text", text=json.dumps(result, indent=2, cls=DateTimeEncoder))]
+
+            # ---- REAL FINALIZATION ----
             # Execute finalization steps
             summary = {
                 "folders_created": [],
@@ -1142,39 +1248,39 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 "configs_updated": [],
                 "errors": []
             }
-            
+
             try:
                 # 1. Create PARA structure
                 logger.info("Creating PARA folder structure")
                 folders = create_para_structure(BASE_DIR)
                 summary['folders_created'] = folders
-                
+
                 # 2. Create initial files
                 logger.info("Creating initial files")
                 files = create_initial_files(BASE_DIR, session)
                 summary['files_created'].extend(files)
-                
+
                 # 3. Create user-profile.yaml
                 logger.info("Creating user-profile.yaml")
                 if yaml and create_user_profile(session):
                     summary['files_created'].append('System/user-profile.yaml')
                 else:
                     summary['errors'].append("Could not create user-profile.yaml")
-                
+
                 # 4. Create pillars.yaml
                 logger.info("Creating pillars.yaml")
                 if yaml and create_pillars_file(session['data']['pillars']):
                     summary['files_created'].append('System/pillars.yaml')
                 else:
                     summary['errors'].append("Could not create pillars.yaml")
-                
+
                 # 5. Update CLAUDE.md
                 logger.info("Updating CLAUDE.md")
                 if update_claude_md(session):
                     summary['configs_updated'].append('CLAUDE.md')
                 else:
                     summary['errors'].append("Could not update CLAUDE.md")
-                
+
                 # 6. Setup MCP config
                 logger.info("Setting up .mcp.json")
                 success, error = setup_mcp_config(BASE_DIR)
@@ -1182,7 +1288,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                     summary['configs_updated'].append('System/.mcp.json')
                 else:
                     summary['errors'].append(f"MCP config error: {error}")
-                
+
                 # 7. Create completion marker
                 logger.info("Creating completion marker")
                 marker_data = {
@@ -1196,12 +1302,12 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 }
                 MARKER_FILE.write_text(json.dumps(marker_data, indent=2, cls=DateTimeEncoder))
                 logger.info("Completion marker created")
-                
+
                 # 8. Delete session file
                 if SESSION_FILE.exists():
                     SESSION_FILE.unlink()
                     logger.info("Deleted session file")
-                
+
                 result = create_success_response(
                     summary,
                     f"Onboarding complete! Created {len(folders)} folders, {len(summary['files_created'])} files"
@@ -1243,6 +1349,20 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
             
             return [types.TextContent(type="text", text=json.dumps(result, indent=2, cls=DateTimeEncoder))]
         
+        elif name == "cleanup_qa_session":
+            if SESSION_FILE.exists():
+                SESSION_FILE.unlink()
+                result = create_success_response(
+                    {"session_deleted": True},
+                    "QA session cleaned up. Session file deleted."
+                )
+            else:
+                result = create_success_response(
+                    {"session_deleted": False},
+                    "No session file to clean up."
+                )
+            return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
+
         else:
             result = create_error_response(f"Unknown tool: {name}")
             return [types.TextContent(type="text", text=json.dumps(result, indent=2))]

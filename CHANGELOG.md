@@ -6,6 +6,18 @@ All notable changes to Dex will be documented in this file.
 
 ---
 
+## [1.7.0] - 2026-02-16
+
+### ✨ Smoother Onboarding — Clickable Choices & Cross-Platform Support
+
+**Before:** During setup, picking your role meant scrolling through a wall of 31 numbered options and typing a number. If your Mac's Calendar app was running in the background (but not in the foreground), Dex couldn't detect your calendars — silently skipping calendar optimization. And if you onboarded in Cursor vs Claude Code, the question prompts might not work because each platform has a different tool for presenting clickable options.
+
+**Now:** Role selection, company size, and other choices are presented as clickable lists — just pick from the menu. Dex detects your platform once at the start (Cursor vs Claude Code vs terminal) and uses the right question tool throughout. Calendar detection works regardless of whether Calendar.app is in the foreground or background. QA testing uses dry-run mode so nothing gets overwritten.
+
+**Result:** Onboarding feels polished — fewer things to type, fewer silent failures, works correctly whether you're in Cursor or Claude Code.
+
+---
+
 ## [1.6.0] - 2026-02-16
 
 ### 🔧 Fixed: "Evolve Itself" Was Broken — Now It Actually Works
