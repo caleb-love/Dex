@@ -12,7 +12,7 @@
  *
  * Data source priority:
  *   1. Granola MCP server (https://mcp.granola.ai/mcp) — includes mobile recordings
- *   2. Local Granola cache (cache-v3.json) — desktop-only fallback
+ *   2. Local Granola cache (cache-v*.json, latest version) — desktop-only fallback
  *
  * Usage:
  *   node .scripts/meeting-intel/sync-from-granola.cjs           # Process new meetings
@@ -35,31 +35,40 @@ const VAULT_ROOT = path.resolve(__dirname, '../..');
 const GRANOLA_MCP_ENDPOINT = 'https://mcp.granola.ai/mcp';
 const TOKEN_FILE = path.join(os.homedir(), '.config', 'dex', 'granola-tokens.json');
 
-// Get Granola cache path for current OS
+// Find the highest-versioned cache-v*.json in a directory
+function findLatestGranolaCache(granolaDir) {
+  if (!fs.existsSync(granolaDir)) return null;
+  const files = fs.readdirSync(granolaDir)
+    .filter(f => /^cache-v\d+\.json$/.test(f))
+    .sort((a, b) => {
+      const vA = parseInt(a.match(/v(\d+)/)[1]);
+      const vB = parseInt(b.match(/v(\d+)/)[1]);
+      return vB - vA; // descending
+    });
+  return files.length > 0 ? path.join(granolaDir, files[0]) : null;
+}
+
+// Get Granola cache path for current OS (auto-detects latest cache version)
 function getGranolaCachePath() {
   const homedir = os.homedir();
   const platform = os.platform();
 
   if (platform === 'darwin') {
-    // macOS
-    return path.join(homedir, 'Library/Application Support/Granola/cache-v3.json');
+    const granolaDir = path.join(homedir, 'Library/Application Support/Granola');
+    return findLatestGranolaCache(granolaDir) || path.join(granolaDir, 'cache-v3.json');
   } else if (platform === 'win32') {
-    // Windows - try AppData\Roaming first, then Local
     const roaming = process.env.APPDATA || path.join(homedir, 'AppData/Roaming');
     const local = process.env.LOCALAPPDATA || path.join(homedir, 'AppData/Local');
 
     for (const basePath of [roaming, local]) {
-      const cachePath = path.join(basePath, 'Granola/cache-v3.json');
-      if (fs.existsSync(cachePath)) {
-        return cachePath;
-      }
+      const result = findLatestGranolaCache(path.join(basePath, 'Granola'));
+      if (result) return result;
     }
 
-    // Default to Roaming if neither exists
     return path.join(roaming, 'Granola/cache-v3.json');
   } else {
-    // Linux or other
-    return path.join(homedir, '.config/Granola/cache-v3.json');
+    const granolaDir = path.join(homedir, '.config/Granola');
+    return findLatestGranolaCache(granolaDir) || path.join(granolaDir, 'cache-v3.json');
   }
 }
 

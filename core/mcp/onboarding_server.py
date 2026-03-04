@@ -34,32 +34,6 @@ from mcp.server.models import InitializationOptions
 import mcp.server.stdio
 import mcp.types as types
 
-# Analytics helper (optional - gracefully degrade if not available)
-try:
-    from analytics_helper import fire_event as _fire_analytics_event
-    HAS_ANALYTICS = True
-except ImportError:
-    HAS_ANALYTICS = False
-    def _fire_analytics_event(event_name, properties=None):
-        return {'fired': False, 'reason': 'analytics_not_available'}
-
-# Health system — error queue and health reporting
-try:
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from core.utils.dex_logger import log_error as _log_health_error, mark_healthy as _mark_healthy
-    _HAS_HEALTH = True
-except ImportError:
-    _HAS_HEALTH = False
-
-# Timezone detection
-try:
-    from core.utils.timezone import detect_system_timezone
-    _HAS_TIMEZONE = True
-except ImportError:
-    _HAS_TIMEZONE = False
-    def detect_system_timezone():
-        return ""
-
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -281,23 +255,39 @@ def check_calendar_app() -> Dict[str, Any]:
         }
 
 def check_granola() -> Dict[str, Any]:
-    """Check if Granola is installed"""
+    """Check if Granola is installed (auto-detects latest cache version)"""
+    import re as _re
+
+    def _find_latest(granola_dir):
+        candidates = sorted(
+            granola_dir.glob("cache-v*.json"),
+            key=lambda p: int(_re.search(r'v(\d+)', p.name).group(1))
+            if _re.search(r'v(\d+)', p.name) else 0,
+            reverse=True
+        )
+        for c in candidates:
+            if c.exists():
+                return c
+        return None
+
     # Check common Granola cache locations
     if platform.system() == 'Darwin':
-        cache_path = Path.home() / 'Library' / 'Application Support' / 'Granola' / 'cache-v3.json'
+        granola_dir = Path.home() / 'Library' / 'Application Support' / 'Granola'
     elif platform.system() == 'Windows':
         appdata = os.getenv('APPDATA') or os.getenv('LOCALAPPDATA')
         if appdata:
-            cache_path = Path(appdata) / 'Granola' / 'cache-v3.json'
+            granola_dir = Path(appdata) / 'Granola'
         else:
-            cache_path = None
+            granola_dir = None
     else:  # Linux
-        cache_path = Path.home() / '.config' / 'Granola' / 'cache-v3.json'
-    
-    if cache_path and cache_path.exists():
-        return {"installed": True, "cache_found": True, "path": str(cache_path)}
-    else:
-        return {"installed": False, "optional": True}
+        granola_dir = Path.home() / '.config' / 'Granola'
+
+    if granola_dir:
+        cache_path = _find_latest(granola_dir)
+        if cache_path:
+            return {"installed": True, "cache_found": True, "path": str(cache_path)}
+
+    return {"installed": False, "optional": True}
 
 def create_para_structure(base_path: Path) -> List[str]:
     """Create PARA folder structure"""
@@ -398,13 +388,6 @@ def create_user_profile(session_data: Dict) -> bool:
         
         # Update Obsidian mode (defaults to false)
         profile['obsidian_mode'] = data.get('obsidian_mode', False)
-        
-        # Auto-detect timezone if not already set
-        if not profile.get('timezone'):
-            detected_tz = detect_system_timezone()
-            if detected_tz:
-                profile['timezone'] = detected_tz
-                logger.info(f"Auto-detected timezone: {detected_tz}")
         
         # Update communication preferences
         comm = data.get('communication', {})
@@ -1345,10 +1328,6 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                     summary,
                     f"Onboarding complete! Created {len(folders)} folders, {len(summary['files_created'])} files"
                 )
-                try:
-                    _fire_analytics_event('onboarding_completed')
-                except Exception:
-                    pass
                 
             except Exception as e:
                 logger.error(f"Error during finalization: {e}")
@@ -1405,13 +1384,6 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
             return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
     
     except Exception as e:
-        if _HAS_HEALTH:
-            _log_health_error(
-                source="onboarding-mcp",
-                message=str(e),
-                human_message=f"Onboarding step '{name}' failed",
-                context={"tool": name}
-            )
         logger.error(f"Error handling {name}: {e}")
         result = create_error_response(f"Internal error: {e}")
         return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
@@ -1422,8 +1394,6 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
 
 async def _main():
     """Main entry point for the MCP server"""
-    if _HAS_HEALTH:
-        _mark_healthy("onboarding-mcp")
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,

@@ -114,9 +114,9 @@ if [ ! -f "$VAULT_PATH/.env" ]; then
 fi
 
 # Check for Granola
-GRANOLA_CACHE="$HOME/Library/Application Support/Granola/cache-v3.json"
-if [ -f "$GRANOLA_CACHE" ]; then
-    echo -e "${GREEN}✓${NC} Granola cache found"
+GRANOLA_CACHE=$(ls -1 "$HOME/Library/Application Support/Granola/cache-v"*.json 2>/dev/null | sort -t'v' -k2 -rn | head -1)
+if [ -n "$GRANOLA_CACHE" ]; then
+    echo -e "${GREEN}✓${NC} Granola cache found: $(basename "$GRANOLA_CACHE")"
 else
     echo -e "${YELLOW}!${NC} Granola cache not found. Install Granola and record a meeting first."
 fi

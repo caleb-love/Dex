@@ -16,12 +16,27 @@ const os = require('os');
 
 const TOKEN_FILE = path.join(os.homedir(), '.config', 'dex', 'granola-tokens.json');
 const MCP_CLIENT = path.join(__dirname, 'granola-mcp-client.cjs');
+// Find the highest-versioned cache-v*.json in a directory
+function findLatestGranolaCache(granolaDir) {
+  if (!fs.existsSync(granolaDir)) return null;
+  const files = fs.readdirSync(granolaDir)
+    .filter(f => /^cache-v\d+\.json$/.test(f))
+    .sort((a, b) => {
+      const vA = parseInt(a.match(/v(\d+)/)[1]);
+      const vB = parseInt(b.match(/v(\d+)/)[1]);
+      return vB - vA;
+    });
+  return files.length > 0 ? path.join(granolaDir, files[0]) : null;
+}
+
 const GRANOLA_CACHE = (() => {
   const platform = os.platform();
   const home = os.homedir();
-  if (platform === 'darwin') return path.join(home, 'Library/Application Support/Granola/cache-v3.json');
-  if (platform === 'win32') return path.join(process.env.APPDATA || path.join(home, 'AppData/Roaming'), 'Granola/cache-v3.json');
-  return path.join(home, '.config/Granola/cache-v3.json');
+  let granolaDir;
+  if (platform === 'darwin') granolaDir = path.join(home, 'Library/Application Support/Granola');
+  else if (platform === 'win32') granolaDir = path.join(process.env.APPDATA || path.join(home, 'AppData/Roaming'), 'Granola');
+  else granolaDir = path.join(home, '.config/Granola');
+  return findLatestGranolaCache(granolaDir) || path.join(granolaDir, 'cache-v3.json');
 })();
 
 // Check if user uses Granola at all
