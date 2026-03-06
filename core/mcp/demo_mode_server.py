@@ -314,13 +314,13 @@ def scan_planning_and_career_files() -> Set[str]:
     files_to_scan = [
         BASE_DIR / '01-Quarter_Goals' / 'Quarter_Goals.md',
         BASE_DIR / '02-Week_Priorities' / 'Week_Priorities.md',
-        BASE_DIR / 'Active' / 'Career' / 'Growth_Goals.md',
-        BASE_DIR / 'Active' / 'Career' / 'Current_Role.md',
-        BASE_DIR / 'Active' / 'Career' / 'Career_Ladder.md',
+        BASE_DIR / '05-Areas' / 'Career' / 'Growth_Goals.md',
+        BASE_DIR / '05-Areas' / 'Career' / 'Current_Role.md',
+        BASE_DIR / '05-Areas' / 'Career' / 'Career_Ladder.md',
     ]
 
     evidence_dirs = [
-        BASE_DIR / 'Resources' / 'Career_Evidence',
+        BASE_DIR / '05-Areas' / 'Career' / 'Evidence',
         BASE_DIR / '05-Areas' / 'Career' / 'Evidence',
     ]
     for edir in evidence_dirs:

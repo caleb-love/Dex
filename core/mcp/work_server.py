@@ -109,15 +109,15 @@ if not _vault_path:
     logging.warning("VAULT_PATH not set — falling back to cwd(). Task ID generation may produce duplicates.")
 BASE_DIR = Path(_vault_path) if _vault_path else Path.cwd()
 TASKS_FILE = BASE_DIR / '03-Tasks/Tasks.md'
-WEEK_PRIORITIES_FILE = BASE_DIR / 'Inbox' / 'Week Priorities.md'
+WEEK_PRIORITIES_FILE = BASE_DIR / '02-Week_Priorities' / 'Week_Priorities.md'
 QUARTER_GOALS_FILE = BASE_DIR / '01-Quarter_Goals/Quarter_Goals.md'
 GOALS_FILE = BASE_DIR / 'GOALS.md'  # Legacy, kept for compatibility
-INBOX_DIR = BASE_DIR / 'Inbox'
+INBOX_DIR = BASE_DIR / '00-Inbox'
 PILLARS_FILE = BASE_DIR / 'System' / 'pillars.yaml'
 SKILL_RATINGS_FILE = BASE_DIR / 'System' / 'Skill_Ratings' / 'ratings.jsonl'
-COMPANIES_DIR = BASE_DIR / 'Active' / 'Relationships' / 'Companies'
-PEOPLE_DIR = BASE_DIR / 'People'
-MEETINGS_DIR = BASE_DIR / 'Inbox' / 'Meetings'
+COMPANIES_DIR = BASE_DIR / '05-Areas' / 'Companies'
+PEOPLE_DIR = BASE_DIR / '05-Areas' / 'People'
+MEETINGS_DIR = BASE_DIR / '00-Inbox' / 'Meetings'
 PEOPLE_INDEX_FILE = BASE_DIR / 'System' / 'People_Index.json'
 MEETING_CACHE_FILE = BASE_DIR / 'System' / 'Memory' / 'meeting-cache.json'
 
@@ -155,19 +155,19 @@ def get_pillars_file() -> Path:
 def get_week_priorities_file() -> Path:
     """Get the appropriate Week Priorities file based on demo mode"""
     if is_demo_mode():
-        return DEMO_DIR / 'Inbox' / 'Week Priorities.md'
+        return DEMO_DIR / '02-Week_Priorities' / 'Week_Priorities.md'
     return WEEK_PRIORITIES_FILE
 
 def get_people_dir() -> Path:
     """Get the appropriate People directory based on demo mode"""
     if is_demo_mode():
-        return DEMO_DIR / 'People'
+        return DEMO_DIR / '05-Areas' / 'People'
     return PEOPLE_DIR
 
 def get_meetings_dir() -> Path:
     """Get the appropriate Meetings directory based on demo mode"""
     if is_demo_mode():
-        return DEMO_DIR / 'Inbox' / 'Meetings'
+        return DEMO_DIR / '00-Inbox' / 'Meetings'
     return MEETINGS_DIR
 
 
@@ -796,14 +796,8 @@ def get_company_domains(company_filepath: Path) -> List[str]:
 # ============================================================================
 
 def _resolve_people_dir() -> Path:
-    """Resolve the actual People directory, checking both possible locations."""
-    standard = get_people_dir()
-    if standard.exists() and any(standard.iterdir()):
-        return standard
-    para = BASE_DIR / '05-Areas' / 'People'
-    if para.exists():
-        return para
-    return standard
+    """Resolve the actual People directory."""
+    return get_people_dir()
 
 
 def build_people_index_data() -> Dict[str, Any]:

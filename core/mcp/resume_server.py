@@ -94,10 +94,10 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 # Configuration - Vault paths
 BASE_DIR = Path(os.environ.get('VAULT_PATH', Path.cwd()))
-CAREER_DIR = BASE_DIR / 'Active' / 'Career'
+CAREER_DIR = BASE_DIR / '05-Areas' / 'Career'
 RESUME_DIR = CAREER_DIR / 'Resume'
 SESSIONS_DIR = RESUME_DIR / 'Sessions'
-EVIDENCE_DIR = BASE_DIR / 'Resources' / 'Career_Evidence'
+EVIDENCE_DIR = BASE_DIR / '05-Areas' / 'Career' / 'Evidence'
 
 # Ensure directories exist
 SESSIONS_DIR.mkdir(parents=True, exist_ok=True)

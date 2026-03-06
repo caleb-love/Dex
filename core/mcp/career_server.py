@@ -75,8 +75,8 @@ class DateTimeEncoder(json.JSONEncoder):
 
 # Configuration - Vault paths
 BASE_DIR = Path(os.environ.get('VAULT_PATH', Path.cwd()))
-CAREER_DIR = BASE_DIR / 'Active' / 'Career'
-EVIDENCE_DIR = BASE_DIR / 'Resources' / 'Career_Evidence'
+CAREER_DIR = BASE_DIR / '05-Areas' / 'Career'
+EVIDENCE_DIR = BASE_DIR / '05-Areas' / 'Career' / 'Evidence'
 LADDER_FILE = CAREER_DIR / 'Career_Ladder.md'
 
 # Initialize the MCP server

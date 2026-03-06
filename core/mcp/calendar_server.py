@@ -41,7 +41,7 @@ import mcp.types as types
 
 # Vault paths
 VAULT_PATH = Path(os.environ.get('VAULT_PATH', Path.cwd()))
-PEOPLE_DIR = VAULT_PATH / "People"
+PEOPLE_DIR = VAULT_PATH / "05-Areas" / "People"
 
 # Health system — error queue and health reporting
 try:
