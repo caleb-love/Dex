@@ -13,6 +13,11 @@ from core import paths
 # Helpers
 # ---------------------------------------------------------------------------
 
+# Directories that may not exist in every vault (e.g. Career/Evidence is only
+# created when the career feature is used, Daily_Plans may be named Daily_Prep).
+OPTIONAL_DIRS = {"DAILY_PLANS_DIR", "EVIDENCE_DIR"}
+
+
 def _dir_constants() -> list[tuple[str, Path]]:
     """Return all module-level Path constants ending in _DIR."""
     return [
@@ -44,6 +49,8 @@ class TestDirectoryConstants:
         ids=[name for name, _ in _dir_constants()],
     )
     def test_directory_exists(self, name: str, path: Path):
+        if name in OPTIONAL_DIRS and not path.is_dir():
+            pytest.skip(f"{name} is optional and does not exist in this vault")
         assert path.is_dir(), f"{name} = {path} does not exist as a directory"
 
 
