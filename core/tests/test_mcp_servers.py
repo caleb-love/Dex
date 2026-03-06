@@ -25,12 +25,7 @@ SERVERS = [
 )
 def test_server_imports_and_has_object(module_path: str, attr_name: str):
     """Each MCP server module should import without error and expose its server object."""
-    try:
-        mod = importlib.import_module(module_path)
-    except Exception as exc:
-        pytest.skip(f"Import failed: {exc}")
-        return
-
+    mod = importlib.import_module(module_path)
     assert hasattr(mod, attr_name), (
         f"{module_path} imported OK but has no '{attr_name}' attribute"
     )
