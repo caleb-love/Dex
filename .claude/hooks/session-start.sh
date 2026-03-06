@@ -222,7 +222,7 @@ fi
 
 # 11. QMD Index Refresh (if stale > 12 hours)
 QMD_TIMESTAMP="$CLAUDE_DIR/System/.last-qmd-update"
-QMD_BIN="/Users/dave/.bun/bin/qmd"
+QMD_BIN="${QMD_BIN:-$(which qmd 2>/dev/null || echo '')}"
 if [[ -x "$QMD_BIN" && -f "$ONBOARDING_MARKER" ]]; then
     NEEDS_UPDATE=false
     if [[ ! -f "$QMD_TIMESTAMP" ]]; then

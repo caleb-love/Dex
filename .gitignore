@@ -56,6 +56,8 @@ System/my-customizations.md
 
 # Pi integration (created when user activates Pi beta)
 .pi/
+# Symlink to pi-extensions/dex (tracked via pi-extensions/)
+!.pi/agent/extensions/dex
 
 # Beta documentation (created on feature activation)
 System/Beta/
