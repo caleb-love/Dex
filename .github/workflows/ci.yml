@@ -11,7 +11,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: pip install -r requirements.txt pytest ruff
+      - name: Install Python dependencies
+        run: |
+          pip install pytest ruff
+          pip install mcp pyyaml python-dateutil requests
       - run: npm ci
       - name: Generate paths.json
         run: python core/paths.py
