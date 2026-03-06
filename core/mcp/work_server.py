@@ -1200,7 +1200,7 @@ def refresh_company_page(company_path: str) -> Dict[str, Any]:
     if not company_path.endswith('.md'):
         company_path += '.md'
     
-    if company_path.startswith('Active/'):
+    if company_path.startswith('05-Areas/'):
         filepath = BASE_DIR / company_path
     else:
         filepath = COMPANIES_DIR / Path(company_path).name
@@ -3078,7 +3078,7 @@ async def handle_list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "company_path": {"type": "string", "description": "Path to company page (e.g., 'Acme_Corp' or 'Active/Relationships/Companies/Acme_Corp.md')"}
+                    "company_path": {"type": "string", "description": "Path to company page (e.g., 'Acme_Corp' or '05-Areas/Companies/Acme_Corp.md')"}
                 },
                 "required": ["company_path"]
             }
