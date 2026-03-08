@@ -3,8 +3,14 @@ on: [push, pull_request]
 jobs:
   quality:
     runs-on: macos-latest
+    env:
+      VAULT_PATH: core/tests/fixtures/vault
+      COVERAGE_MIN_TOTAL: "15"
+      COVERAGE_MIN_TOUCHED: "10"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -13,15 +19,29 @@ jobs:
           node-version: '20'
       - name: Install Python dependencies
         run: |
-          pip install pytest ruff
+          pip install pytest pytest-cov ruff
           pip install mcp pyyaml python-dateutil requests
       - run: npm ci
+      - name: Ensure policy scripts are executable
+        run: chmod +x scripts/check-*.sh scripts/check-coverage-threshold.py
+      - name: PR governance check
+        if: github.event_name == 'pull_request'
+        run: bash scripts/check-pr-governance.sh
+      - name: Diff-aware test gate
+        if: github.event_name == 'pull_request'
+        run: bash scripts/check-test-delta.sh
+      - name: Documentation drift gate
+        if: github.event_name == 'pull_request'
+        run: bash scripts/check-doc-drift.sh
       - name: Create vault directories
         run: python -c "from core import paths; from pathlib import Path; [getattr(paths, n).mkdir(parents=True, exist_ok=True) for n in dir(paths) if n.endswith('_DIR') and isinstance(getattr(paths, n), Path)]"
       - name: Generate paths.json
         run: python core/paths.py
-      - name: Path contract tests
-        run: pytest core/tests/ -v
+      - name: Test suites + coverage
+        run: pytest core/tests/ core/mcp/tests/ -v --cov=core --cov-report=term --cov-report=json:coverage.json --cov-fail-under="${COVERAGE_MIN_TOTAL}"
+      - name: Touched-file coverage gate
+        if: github.event_name == 'pull_request'
+        run: python scripts/check-coverage-threshold.py
       - name: Ruff linting
         run: ruff check core/
       - name: Distribution safety check

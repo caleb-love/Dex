@@ -165,6 +165,12 @@ test-vault/
 demo-vault/
 *-test/
 
+# Keep fixture vault tracked for deterministic tests
+!core/tests/
+!core/tests/fixtures/
+!core/tests/fixtures/vault/
+!core/tests/fixtures/vault/**
+
 # Personal experiments
 playground/
 experiments/

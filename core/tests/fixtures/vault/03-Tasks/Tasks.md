@@ -1,0 +1,1 @@
+- [ ] Validate fixture vault wiring ^task-001
