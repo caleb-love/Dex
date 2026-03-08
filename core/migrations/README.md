@@ -35,7 +35,7 @@ cp -r ~/Documents/dex ~/Documents/dex-backup-$(date +%Y%m%d)
 
 **Step 3: Run the migration script**
 ```bash
-./core/migrations/v1-to-v2.sh
+python core/migrations/migrate_v1_to_v2.py --apply
 ```
 
 The script will:
@@ -175,7 +175,8 @@ This helps debug if something goes wrong.
 
 ## Example: Folder Rename Migration
 
-See `v1-to-v2-example.sh` for a complete example of a folder rename migration.
+Use `migrate_v1_to_v2.py` for an executable dry-run/apply/rollback migration flow.
+`v1-to-v2-example.sh` remains as a reference pattern.
 
 ---
 

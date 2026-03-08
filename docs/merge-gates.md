@@ -11,8 +11,10 @@ Configure GitHub branch protection on `main` to require:
 - docs drift gate
 - hook harness tests
 - linting
-- `core/tests` + `core/mcp/tests`
+- `core/tests` + `core/mcp/tests` + `core/migrations/tests`
 - coverage thresholds
+- security gate
+- large-vault performance budget
 - distribution/path safety checks
 
 ## Branch Protection Settings

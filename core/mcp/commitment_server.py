@@ -62,6 +62,7 @@ from core.paths import (
 from core.paths import (
     VAULT_ROOT,
 )
+from core.utils.file_ops import atomic_write_json, file_lock
 
 VAULT_PATH = str(VAULT_ROOT)
 
@@ -193,8 +194,9 @@ def load_queue() -> dict:
 def save_queue(queue: dict):
     """Save commitment queue to file."""
     QUEUE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(QUEUE_FILE, 'w') as f:
-        json.dump(queue, f, indent=2)
+    lock_path = QUEUE_FILE.with_suffix(f"{QUEUE_FILE.suffix}.lock")
+    with file_lock(lock_path):
+        atomic_write_json(QUEUE_FILE, queue)
 
 def generate_commitment_id() -> str:
     """Generate unique commitment ID."""

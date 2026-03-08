@@ -18,7 +18,7 @@ if [ -z "$CODE_FILES" ]; then
 fi
 
 PATTERN="00-Inbox|01-Quarter_Goals|02-Week_Priorities|03-Tasks|04-Projects|05-Areas|06-Resources|07-Archives"
-ALLOWLIST='^(core/paths\.py|\.claude/hooks/paths\.cjs|\.claude/hooks/(company-context-injector|person-context-injector)\.cjs|scripts/check-path-consistency\.sh|scripts/verify-distribution\.sh|core/migrations/)'
+ALLOWLIST='^(core/paths\.py|\.claude/hooks/paths\.cjs|\.claude/hooks/(company-context-injector|person-context-injector)\.cjs|scripts/check-path-consistency\.sh|scripts/verify-distribution\.sh|scripts/check-path-contract-usage\.sh|core/migrations/)'
 
 VIOLATIONS=0
 for file in $CODE_FILES; do
