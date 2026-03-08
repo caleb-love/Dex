@@ -57,10 +57,11 @@ from core.paths import (
     COMMITMENT_QUEUE_FILE as QUEUE_FILE,
 )
 from core.paths import (
-    USER_PROFILE_FILE as USER_PROFILE,
+    PROJECTS_DIR,
+    VAULT_ROOT,
 )
 from core.paths import (
-    VAULT_ROOT,
+    USER_PROFILE_FILE as USER_PROFILE,
 )
 from core.utils.file_ops import atomic_write_json, file_lock
 
@@ -365,7 +366,7 @@ def match_to_vault_context(text: str, detected_person: Optional[str] = None) -> 
                 query=text,
                 limit=5,
                 min_score=0.3,
-                fallback_glob="04-Projects/**/*.md"
+                fallback_glob=f"{PROJECTS_DIR.name}/**/*.md"
             )
             for r in results:
                 filepath = r.get('filepath', '')

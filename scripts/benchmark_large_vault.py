@@ -4,50 +4,96 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import tempfile
 import time
 from pathlib import Path
 
+# Ensure `core` package is importable when executing from scripts/.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from core.paths import (
+    ARCHIVES_DIR,
+    COMPANIES_DIR,
+    DAILY_PLANS_DIR,
+    IDEAS_DIR,
+    INTEL_DIR,
+    LEARNINGS_DIR,
+    MEETINGS_DIR,
+    PEOPLE_DIR,
+    PROJECTS_DIR,
+    QUARTER_GOALS_DIR,
+    SESSIONS_DIR,
+    SYSTEM_DIR,
+    TASKS_DIR,
+    TASKS_FILE,
+    VAULT_ROOT,
+    WEEK_PRIORITIES_DIR,
+)
+
+
+def _rel(path: Path) -> Path:
+    return path.relative_to(VAULT_ROOT)
+
+
+MEETINGS_REL = _rel(MEETINGS_DIR)
+IDEAS_REL = _rel(IDEAS_DIR)
+DAILY_PLANS_REL = _rel(DAILY_PLANS_DIR)
+QUARTER_GOALS_REL = _rel(QUARTER_GOALS_DIR)
+WEEK_PRIORITIES_REL = _rel(WEEK_PRIORITIES_DIR)
+TASKS_DIR_REL = _rel(TASKS_DIR)
+TASKS_FILE_REL = _rel(TASKS_FILE)
+PROJECTS_REL = _rel(PROJECTS_DIR)
+PEOPLE_INTERNAL_REL = _rel(PEOPLE_DIR / "Internal")
+PEOPLE_EXTERNAL_REL = _rel(PEOPLE_DIR / "External")
+COMPANIES_REL = _rel(COMPANIES_DIR)
+EVIDENCE_REL = _rel(SESSIONS_DIR.parent.parent / "Evidence")
+MEETING_INTEL_REL = _rel(INTEL_DIR / "Meeting_Intel")
+LEARNINGS_REL = _rel(LEARNINGS_DIR)
+ARCHIVES_REL = _rel(ARCHIVES_DIR)
+SYSTEM_REL = _rel(SYSTEM_DIR)
 
 PARA_DIRS = [
-    "00-Inbox/Meetings",
-    "00-Inbox/Ideas",
-    "00-Inbox/Daily_Plans",
-    "01-Quarter_Goals",
-    "02-Week_Priorities",
-    "03-Tasks",
-    "04-Projects",
-    "05-Areas/People/Internal",
-    "05-Areas/People/External",
-    "05-Areas/Companies",
-    "05-Areas/Career/Evidence",
-    "06-Resources/Intel/Meeting_Intel",
-    "06-Resources/Learnings",
-    "07-Archives",
-    "System",
+    MEETINGS_REL,
+    IDEAS_REL,
+    DAILY_PLANS_REL,
+    QUARTER_GOALS_REL,
+    WEEK_PRIORITIES_REL,
+    TASKS_DIR_REL,
+    PROJECTS_REL,
+    PEOPLE_INTERNAL_REL,
+    PEOPLE_EXTERNAL_REL,
+    COMPANIES_REL,
+    EVIDENCE_REL,
+    MEETING_INTEL_REL,
+    LEARNINGS_REL,
+    ARCHIVES_REL,
+    SYSTEM_REL,
 ]
 
 
 def create_synthetic_vault(root: Path, file_count: int) -> None:
     for d in PARA_DIRS:
         (root / d).mkdir(parents=True, exist_ok=True)
-    (root / "03-Tasks/Tasks.md").write_text("# Tasks\n", encoding="utf-8")
+    (root / TASKS_FILE_REL).write_text("# Tasks\n", encoding="utf-8")
 
     for idx in range(file_count):
         if idx % 5 == 0:
-            path = root / "00-Inbox/Meetings" / f"meeting-{idx:05d}.md"
+            path = root / MEETINGS_REL / f"meeting-{idx:05d}.md"
             payload = f"# Meeting {idx}\n- follow-up task task-{idx:05d}\n"
         elif idx % 5 == 1:
-            path = root / "04-Projects" / f"project-{idx:05d}.md"
-            payload = f"# Project {idx}\nReference: 03-Tasks/Tasks.md\n"
+            path = root / PROJECTS_REL / f"project-{idx:05d}.md"
+            payload = f"# Project {idx}\nReference: {TASKS_FILE_REL.as_posix()}\n"
         elif idx % 5 == 2:
-            path = root / "05-Areas/People/Internal" / f"person-{idx:05d}.md"
+            path = root / PEOPLE_INTERNAL_REL / f"person-{idx:05d}.md"
             payload = f"# Person {idx}\n- [ ] action item {idx}\n"
         elif idx % 5 == 3:
-            path = root / "06-Resources/Learnings" / f"note-{idx:05d}.md"
+            path = root / LEARNINGS_REL / f"note-{idx:05d}.md"
             payload = f"# Learning {idx}\nkeywords: testing, automation\n"
         else:
-            path = root / "07-Archives" / f"archive-{idx:05d}.md"
+            path = root / ARCHIVES_REL / f"archive-{idx:05d}.md"
             payload = f"# Archived {idx}\n"
         path.write_text(payload, encoding="utf-8")
 
