@@ -4,6 +4,7 @@ Tests for Commitment Detection MCP Server
 Run with: pytest core/mcp/tests/test_commitment_server.py -v
 """
 
+import asyncio
 import os
 import sys
 from datetime import datetime, timedelta
@@ -357,15 +358,14 @@ Sarah"""
 class TestIntegration:
     """Integration tests requiring ScreenPipe."""
     
-    @pytest.mark.asyncio
-    async def test_screenpipe_query(self):
+    def test_screenpipe_query(self):
         """Test querying ScreenPipe."""
         from commitment_server import query_screenpipe
         
         end_time = datetime.now().isoformat()
         start_time = (datetime.now() - timedelta(hours=1)).isoformat()
         
-        results = await query_screenpipe(start_time, end_time)
+        results = asyncio.run(query_screenpipe(start_time, end_time))
         # Just verify we get a list back (may be empty)
         assert isinstance(results, list)
 
