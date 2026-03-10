@@ -57,11 +57,13 @@ from core.paths import (
     COMMITMENT_QUEUE_FILE as QUEUE_FILE,
 )
 from core.paths import (
-    USER_PROFILE_FILE as USER_PROFILE,
-)
-from core.paths import (
+    PROJECTS_DIR,
     VAULT_ROOT,
 )
+from core.paths import (
+    USER_PROFILE_FILE as USER_PROFILE,
+)
+from core.utils.file_ops import atomic_write_json, file_lock
 
 VAULT_PATH = str(VAULT_ROOT)
 
@@ -193,8 +195,9 @@ def load_queue() -> dict:
 def save_queue(queue: dict):
     """Save commitment queue to file."""
     QUEUE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(QUEUE_FILE, 'w') as f:
-        json.dump(queue, f, indent=2)
+    lock_path = QUEUE_FILE.with_suffix(f"{QUEUE_FILE.suffix}.lock")
+    with file_lock(lock_path):
+        atomic_write_json(QUEUE_FILE, queue)
 
 def generate_commitment_id() -> str:
     """Generate unique commitment ID."""
@@ -363,7 +366,7 @@ def match_to_vault_context(text: str, detected_person: Optional[str] = None) -> 
                 query=text,
                 limit=5,
                 min_score=0.3,
-                fallback_glob="04-Projects/**/*.md"
+                fallback_glob=f"{PROJECTS_DIR.name}/**/*.md"
             )
             for r in results:
                 filepath = r.get('filepath', '')
