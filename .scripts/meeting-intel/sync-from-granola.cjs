@@ -465,6 +465,17 @@ async function getNewMeetingsFromApi(state, forceToday = false) {
 
     log(`  API returned ${response.docs.length} documents`);
 
+    // Load local cache to augment API meetings with transcripts
+    // (API /v2/get-documents does not embed transcripts — they live in the local cache)
+    let localTranscripts = {};
+    try {
+      const cache = readGranolaCache();
+      localTranscripts = cache.transcripts || {};
+      log(`  Loaded ${Object.keys(localTranscripts).length} transcripts from local cache`);
+    } catch (e) {
+      log(`  Warning: Could not load local cache for transcripts: ${e.message}`);
+    }
+
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - LOOKBACK_DAYS);
     const today = new Date().toISOString().split('T')[0];
@@ -488,8 +499,18 @@ async function getNewMeetingsFromApi(state, forceToday = false) {
 
       const meeting = convertApiDocToMeeting(doc);
 
-      // Check minimum content
-      if (meeting.notes.length < MIN_NOTES_LENGTH) continue;
+      // Augment with transcript from local cache if API doc has none
+      if (!meeting.transcript && localTranscripts[doc.id]?.length > 0) {
+        meeting.transcript = localTranscripts[doc.id]
+          .sort((a, b) => new Date(a.start_timestamp) - new Date(b.start_timestamp))
+          .map(t => t.text)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      // Check minimum content — allow through if transcript exists even when notes are short
+      if (meeting.notes.length < MIN_NOTES_LENGTH && meeting.transcript.length < MIN_NOTES_LENGTH) continue;
 
       newMeetings.push(meeting);
     }
@@ -515,8 +536,11 @@ function readGranolaCache() {
   const rawData = fs.readFileSync(GRANOLA_CACHE, 'utf-8');
   const cacheWrapper = JSON.parse(rawData);
 
-  // The cache has a nested structure: { cache: JSON_STRING }
-  const cacheData = JSON.parse(cacheWrapper.cache);
+  // The cache has a nested structure: { cache: JSON_STRING } or { cache: OBJECT }
+  // Newer Granola versions store cache as a pre-parsed object, not a JSON string
+  const cacheData = typeof cacheWrapper.cache === 'string'
+    ? JSON.parse(cacheWrapper.cache)
+    : cacheWrapper.cache;
 
   return {
     documents: cacheData.state?.documents || {},
