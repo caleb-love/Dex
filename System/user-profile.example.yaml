@@ -66,7 +66,7 @@ pillars: []
 # How Dex processes meetings from Granola
 meeting_processing:
   # Mode: "manual" (run /process-meetings) or "automatic" (background sync)
-  mode: manual
+  mode: automatic
   
   # API provider for automatic mode: gemini, anthropic, or openai
   api_provider: gemini
