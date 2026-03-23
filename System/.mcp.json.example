@@ -108,6 +108,10 @@
       "args": ["-y", "slack-mcp"],
       "env": {}
     },
+    "qmd": {
+      "command": "qmd",
+      "args": ["mcp"]
+    },
 
     "_comment_integrations": "--- Optional Integrations (add via /[tool]-setup) ---",
 
